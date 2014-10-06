@@ -1,22 +1,22 @@
 //
 // Serotonin
 //
-// The Wookie plexus has three types of nodes: brain, ganglia, and neuron.
-// To control hairs, the singleton brain talks to numerous ganglia, and each of
-// them talk to numerous neurons, which directly control hairs. To gather
-// instrumentation data, neurons respond to requests from ganglia, and ganglia
-// respond to requests from the brain.
+// The Wookie plexus has three types of nodes: cerebellum, ganglia, and neuron.
+// To control hairs, the singleton cerebellum talks to numerous ganglia, and
+// each of them talk to numerous neurons, which directly control hairs. To
+// gather instrumentation data, neurons respond to requests from ganglia, and
+// ganglia respond to requests from the cerebellum.
 //
-// To the neurons, ganglia are masters. To the ganglia, brain is the master.
-// The opposite of a master is a slave. Slaves only talk to their master in
-// response to a request.
+// To the neurons, ganglia are masters. To the ganglia, cerebellum is the
+// master. The opposite of a master is a slave. Slaves only talk to their master
+// in response to a request.
 //
-// Talkers wait at least 16 us between messages. Listeners expect at least
-// 8 us between messages. Messages consist of a four-bit request type and a
-// fixed length payload, corresponding to the request type.
+// Talkers wait at least 16 us between messages. Listeners expect at least 8 us
+// between messages. Messages consist of a four-bit request type and a fixed
+// length payload, corresponding to the request type.
 //
 // Pins are generally divided into two directions, axons downward and dendrites
-// upward.  For instance, ganglia have two dendrite pins and eleven axon pins.
+// upward. For instance, ganglia have two dendrite pins and eleven axon pins.
 //
 // Request types:
 //
@@ -31,14 +31,14 @@
 //
 //   0100 BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB ...
 //        BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB BBBB
-//     brain to ganglia (B) write, 104 bits
+//     cerebellum to ganglia (B) write, 104 bits
 //
 //   0101 LLLL IIII IIII
-//     brain to ganglia instrument (I) request, 16 bits
+//     cerebellum to ganglia instrument (I) request, 16 bits
 //     if LLLL is 1111, read ganglia, otherwise read neuron (L)
 //
 //   0110 VVVV VVVV VVVV VVVV VVVV VVVV VVVV VVVV
-//     long ganglia to brain instrument (V) response, 36 bits
+//     long ganglia to cerebellum instrument (V) response, 36 bits
 //
 //   0000 0000 0000 0000 0000 0000 0000 0000 0000
 //     instrument response from peer, ignored, 36 bits
@@ -124,9 +124,9 @@
 #define gangliaNeuronData 0x01
 #define gangliaNeuronInstrument 0x02
 #define neuronGangliaInstrument 0x03
-#define brainGangliaData 0x04
-#define brainGangliaInstrument 0x05
-#define gangliaBrainInstrument 0x06
+#define cerebellumGangliaData 0x04
+#define cerebellumGangliaInstrument 0x05
+#define gangliaCerebellumInstrument 0x06
 
 // lowMemory is intended to squeeze into 128 bytes of RAM.
 #if defined __AVR_ATmega328P__
@@ -153,7 +153,7 @@ byte messageLengths[16] = {
 };
 #endif
 
-#if defined roleBrain
+#if defined roleCerebellum
 #define bufferSize 256
 #define axonXOffset 0
 #define axonYOffset 128
@@ -257,7 +257,7 @@ stat latentReadErrors = 0;
 
 #endif
 
-#if defined roleBrain  // ========= BRAIN =========
+#if defined roleCerebellum  // ========= CEREBELLUM =========
 
 #define numAxonPins 4
 #define hasDendrite false
@@ -600,11 +600,11 @@ byte messageLength(byte type) {
     case gangliaNeuronInstrument:
       return neuronInstrumentBits;
     case neuronGangliaInstrument:
-    case gangliaBrainInstrument:
+    case gangliaCerebellumInstrument:
       return instrumentBits;
-    case brainGangliaData:
+    case cerebellumGangliaData:
       return gangliaDataBits;
-    case brainGangliaInstrument:
+    case cerebellumGangliaInstrument:
       return gangliaInstrumentBits;
     default:
       return 0;
@@ -752,9 +752,9 @@ byte handleMessage() {
 #endif
 
 #if defined roleGanglia
-  if (type == brainGangliaData) {
+  if (type == cerebellumGangliaData) {
     handleGangliaData(message);
-  } else if (type == brainGangliaInstrument) {
+  } else if (type == cerebellumGangliaInstrument) {
     handleGangliaInstrument(message);
   } else if (type != peerResponse) {
     unexpectedTypeErrors += 1;
